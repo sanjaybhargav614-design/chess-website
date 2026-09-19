@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess: Bot & Multiplayer with Opening Theory</title>
+
+    <!-- Chessboard CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- App styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+    <!-- Left navigation (visual only) -->
+    <aside class="sidebar">
+        <div class="logo"><span class="pawn">&#9823;</span><span>Chess</span></div>
+        <nav class="nav">
+            <a class="active"><i class="ph-fill ph-hand-pointing" style="color:#f2b880"></i>Play</a>
+            <a><i class="ph-fill ph-puzzle-piece" style="color:#f58a3c"></i>Puzzles</a>
+            <a><i class="ph-fill ph-graduation-cap" style="color:#3fa3d7"></i>Learn</a>
+            <a><i class="ph-fill ph-barbell" style="color:#9a9a99"></i>Train</a>
+            <a><i class="ph-fill ph-binoculars" style="color:#6cb7e6"></i>Watch</a>
+            <a><i class="ph-fill ph-users-three" style="color:#d8a25e"></i>Community</a>
+            <a><i class="ph-bold ph-dots-three" style="color:#c3c2c1"></i>Other</a>
+            <a class="upgrade"><i class="ph-fill ph-diamond"></i>Upgrade</a>
+        </nav>
+        <div class="side-spacer"></div>
+        <div class="side-search"><i class="ph ph-magnifying-glass"></i>Search</div>
+        <div class="side-user">
+            <div class="mini-avatar"><i class="ph-fill ph-user"></i></div>
+            <span id="side-name">Guest</span>
+        </div>
+        <div class="side-icons">
+            <i class="ph-fill ph-users"></i>
+            <i class="ph-fill ph-envelope-simple"></i>
+            <i class="ph-fill ph-bell"></i>
+            <i class="ph-fill ph-gear-six"></i>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <!-- ============================================================ -->
+        <!-- SETUP SCREEN: home menu / bot setup / friend setup / settings -->
+        <!-- No board is shown here at all.                                -->
+        <!-- ============================================================ -->
+        <section class="setup-screen active" id="setup-screen">
+            <div class="panel setup-card">
+                <div class="panel-head">
+                    <button class="back-btn" id="setup-back-btn" onclick="showView('home')" title="Back">
+                        <i class="ph-bold ph-caret-left"></i>
+                    </button>
+                    <i class="ph-fill ph-crown-simple head-icon"></i>
+                    <h1 id="setup-panel-title">Play Chess</h1>
+                </div>
+
+                <div class="panel-body setup-body">
+                    <!-- Home menu -->
+                    <div class="view active" id="view-home">
+                        <button class="menu-card" onclick="showView('bots')">
+                            <i class="ph-fill ph-robot ico" style="color:#8fc9f5"></i>
+                            <span>
+                                <span class="t">Play Bots</span>
+                                <span class="s">Challenge a bot from Casual to Master</span>
+                            </span>
+                        </button>
+                        <button class="menu-card" onclick="showView('friend')">
+                            <i class="ph-fill ph-handshake ico" style="color:#d9a066"></i>
+                            <span>
+                                <span class="t">Play a Friend</span>
+                                <span class="s">Invite a friend to a game of chess</span>
+                            </span>
+                        </button>
+                        <button class="menu-card" onclick="showView('settings')">
+                            <i class="ph-fill ph-gear-six ico" style="color:#9a9a99"></i>
+                            <span>
+                                <span class="t">Settings</span>
+                                <span class="s">Change your name or go full screen</span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Play Bots setup -->
+                    <div class="view" id="view-bots">
+                        <div class="bot-hero">
+                            <div class="avatar"><i class="ph-fill ph-robot"></i></div>
+                            <div>
+                                <div class="n">Light Yagami</div>
+                                <div class="d">Uses opening theory, then calculates the rest</div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="bot-engine">Bot engine</label>
+                            <select id="bot-engine" onchange="onEngineChange()">
+                                <option value="custom" selected>Custom C++ Bot (main.cpp)</option>
+                                <option value="stockfish">Stockfish AI (Grandmaster)</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="bot-depth">Bot strength</label>
+                            <select id="bot-depth">
+                                <option value="3">Casual (Depth 3)</option>
+                                <option value="4" selected>Tactical (Depth 4)</option>
+                                <option value="5">Master (Depth 5)</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="bot-pace">Thinking pace</label>
+                            <select id="bot-pace">
+                                <option value="800">Swift (~0.8s)</option>
+                                <option value="1600" selected>Realistic (~1.6s)</option>
+                                <option value="2500">Deep & Deliberate (~2.5s)</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>I play as</label>
+                            <div class="seg" id="color-seg">
+                                <button data-color="w" class="active" onclick="pickColor('w')"><span class="dot w"></span>White</button>
+                                <button data-color="r" onclick="pickColor('r')"><i class="ph-bold ph-shuffle"></i>Random</button>
+                                <button data-color="b" onclick="pickColor('b')"><span class="dot b"></span>Black</button>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-green" onclick="playBot()">Play</button>
+                    </div>
+
+                    <!-- Play a Friend setup -->
+                    <div class="view" id="view-friend">
+                        <div class="field">
+                            <label>Your invite ID (click to copy)</label>
+                            <div class="id-box" id="my-id" onclick="copyId()">Generating...</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="friend-id">Connect to a friend</label>
+                            <input type="text" id="friend-id" placeholder="Paste friend's ID here...">
+                        </div>
+
+                        <button class="btn btn-green" onclick="connectToPeer()">
+                            <i class="ph-fill ph-users"></i> Join Friend's Game
+                        </button>
+                    </div>
+
+                    <!-- Settings -->
+                    <div class="view" id="view-settings">
+                        <div class="field">
+                            <label for="my-name">Your name</label>
+                            <input type="text" id="my-name" value="Guest" placeholder="Enter your name...">
+                        </div>
+
+                        <button class="btn btn-gray" onclick="toggleFullScreen()">
+                            <i class="ph ph-corners-out"></i> Toggle Full Screen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- GAME SCREEN: board + status/opening panel. Only shown once a -->
+        <!-- game has actually started.                                   -->
+        <!-- ============================================================ -->
+        <section class="game-screen" id="game-screen">
+            <section class="board-stack">
+                <div class="player-bar" id="top-player">
+                    <div class="avatar"><i class="ph-fill ph-user"></i></div>
+                    <div class="pinfo">
+                        <span class="pname">Opponent</span><span class="pnote"></span>
+                    </div>
+                </div>
+
+                <div id="myBoard"></div>
+
+                <div class="player-bar" id="bottom-player">
+                    <div class="avatar"><i class="ph-fill ph-user"></i></div>
+                    <div class="pinfo">
+                        <span class="pname">You</span><span class="pnote"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <button class="back-btn visible" onclick="returnToMenu()" title="Back to Menu">
+                        <i class="ph-bold ph-caret-left"></i>
+                    </button>
+                    <i class="ph-fill ph-crown-simple head-icon"></i>
+                    <h1>Game</h1>
+                </div>
+
+                <div class="panel-body">
+                    <div class="status-box" id="status">
+                        <i class="ph ph-info"></i> <span>Waiting to start...</span>
+                    </div>
+
+                    <!-- Opening Theory -->
+                    <div class="opening-box">
+                        <div class="opening-name-row">
+                            <i class="ph-fill ph-book-open-text"></i>
+                            <span id="opening-name">Starting Position</span>
+                        </div>
+                        <p class="help-text">Book moves (click to play):</p>
+                        <div id="book-moves-list" class="book-chips-wrap"></div>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+    </main>
+</div>
+
+<!-- Core Libraries -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+<!-- App scripts -->
+<script src="openings.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
