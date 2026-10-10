@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-board-theme="emerald">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether Chess — Modern Browser Chess</title>
+
+    <!-- Embedded Scalable SVG Favicon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1117'/%3E%3Cpath d='M16 6 L22 13 L19 22 L13 22 L10 13 Z' fill='%230ea5e9'/%3E%3Ccircle cx='16' cy='8' r='2' fill='%23ffffff'/%3E%3C/svg%3E">
+
+    <!-- Chessboard CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- App Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+    <!-- ======================================================
+         LEFT SIDEBAR — BRAND IDENTITY & NAVIGATION
+    ====================================================== -->
+    <aside class="sidebar" aria-label="Main navigation">
+        <div class="logo" aria-label="Aether Chess">
+            <div class="logo-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L18 8L15 16H9L6 8L12 2Z" />
+                    <circle cx="12" cy="5" r="1.5" fill="#fff" />
+                    <rect x="7" y="18" width="10" height="2" rx="1" />
+                </svg>
+            </div>
+            <span>Aether</span>
+            <span class="logo-badge">Pro</span>
+        </div>
+
+        <nav class="nav" aria-label="Site navigation">
+            <a class="nav-item active" id="nav-play" onclick="showView('home')" role="menuitem">
+                <i class="ph-fill ph-sword" aria-hidden="true"></i>Play
+            </a>
+            <a class="nav-item" id="nav-bots" onclick="showView('bots')" role="menuitem">
+                <i class="ph-fill ph-robot" aria-hidden="true"></i>Bots
+            </a>
+            <a class="nav-item" id="nav-friend" onclick="showView('friend')" role="menuitem">
+                <i class="ph-fill ph-users-three" aria-hidden="true"></i>Play Friend
+            </a>
+            <a class="nav-item" id="nav-history" onclick="showView('history')" role="menuitem">
+                <i class="ph-fill ph-clock-counter-clockwise" aria-hidden="true"></i>History
+            </a>
+            <a class="nav-item" id="nav-settings" onclick="showView('settings')" role="menuitem">
+                <i class="ph-fill ph-gear-six" aria-hidden="true"></i>Settings
+            </a>
+        </nav>
+
+        <div class="side-spacer" role="none"></div>
+
+        <!-- Keyboard Shortcuts Trigger -->
+        <button
+            type="button"
+            class="side-action-btn"
+            onclick="showShortcutsModal()"
+            title="Keyboard Shortcuts (?)"
+            aria-label="Keyboard Shortcuts"
+        >
+            <i class="ph-bold ph-keyboard" aria-hidden="true"></i>
+            <span>Shortcuts</span>
+            <kbd>?</kbd>
+        </button>
+
+        <!-- Dark / Light Theme Quick Switcher -->
+        <div class="side-theme-row">
+            <span class="theme-toggle-label">
+                <i class="ph-bold ph-moon-stars" id="theme-indicator-icon" aria-hidden="true"></i>
+                <span id="theme-text">Dark Mode</span>
+            </span>
+            <button
+                type="button"
+                class="theme-switch-btn"
+                id="theme-toggle-btn"
+                onclick="toggleTheme()"
+                title="Toggle Dark / Light Theme"
+                aria-label="Toggle Dark / Light Theme"
+            >
+                <i class="ph-bold ph-sun" id="theme-btn-icon" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div class="side-user" onclick="showView('settings')" title="User Profile">
+            <div class="mini-avatar" aria-hidden="true">
+                <i class="ph-fill ph-user"></i>
+            </div>
+            <span id="side-name">Guest</span>
+        </div>
+    </aside>
+
+    <!-- ======================================================
+         MAIN CONTENT AREA
+    ====================================================== -->
+    <main class="main" id="main-content">
+
+        <!-- ================================================
+             SETUP SCREEN: home / bots / friend / history / settings
+        ================================================ -->
+        <section class="setup-screen active" id="setup-screen" aria-label="Game setup">
+            <div class="panel setup-card">
+                <header class="panel-head">
+                    <button
+                        class="back-btn"
+                        id="setup-back-btn"
+                        onclick="showView('home')"
+                        title="Back"
+                        aria-label="Back to home"
+                    >
+                        <i class="ph-bold ph-caret-left" aria-hidden="true"></i>
+                    </button>
+                    <i class="ph-fill ph-crown-simple head-icon" aria-hidden="true"></i>
+                    <h1 id="setup-panel-title">Play Chess</h1>
+                </header>
+
+                <div class="panel-body setup-body">
+
+                    <!-- Home Menu -->
+                    <div class="view active" id="view-home" role="menu" aria-label="Play options">
+                        <button class="menu-card" onclick="showView('bots')" role="menuitem">
+                            <i class="ph-fill ph-robot ico" style="color:var(--accent)" aria-hidden="true"></i>
+                            <span>
+                                <span class="t">Play Bots</span>
+                                <span class="s">Challenge 14 calibrated engines from Beginner to Grandmaster</span>
+                            </span>
+                        </button>
+                        <button class="menu-card" onclick="showView('friend')" role="menuitem">
+                            <i class="ph-fill ph-handshake ico" style="color:var(--color-amber)" aria-hidden="true"></i>
+                            <span>
+                                <span class="t">Play a Friend</span>
+                                <span class="s">Instant peer-to-peer multiplayer via shareable code</span>
+                            </span>
+                        </button>
+                        <button class="menu-card" onclick="showView('history')" role="menuitem">
+                            <i class="ph-fill ph-clock-counter-clockwise ico" style="color:var(--color-purple)" aria-hidden="true"></i>
+                            <span>
+                                <span class="t">Match History</span>
+                                <span class="s">Review completed games, results, and exported PGN records</span>
+                            </span>
+                        </button>
+                        <button class="menu-card" onclick="showView('settings')" role="menuitem">
+                            <i class="ph-fill ph-gear-six ico" style="color:var(--text-muted)" aria-hidden="true"></i>
+                            <span>
+                                <span class="t">Settings &amp; Themes</span>
+                                <span class="s">Board color palettes, dark/light theme, display name</span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Play Bots Setup -->
+                    <div class="view" id="view-bots" aria-label="Bot selection">
+
+                        <!-- Selected Bot Hero Card -->
+                        <div class="bot-hero" id="bot-hero" aria-live="polite" aria-label="Selected bot">
+                            <div class="hero-avatar" id="bot-hero-avatar" aria-hidden="true"></div>
+                            <div class="hero-info">
+                                <div class="hero-title-row">
+                                    <span class="hero-name" id="bot-hero-name">Maximum</span>
+                                    <span class="hero-elo" id="bot-hero-elo">3200 <span style="font-size:11px;color:var(--text-muted);font-weight:600">(estimated)</span></span>
+                                </div>
+                                <div class="hero-quote" id="bot-hero-quote">
+                                    Calculates over 20 moves ahead with 0.00% error rate.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bot Category Filter Tabs -->
+                        <div
+                            class="bot-category-tabs"
+                            id="bot-category-tabs"
+                            role="tablist"
+                            aria-label="Filter bots by skill level"
+                        >
+                            <!-- Populated dynamically by bots.js -->
+                        </div>
+
+                        <!-- Bots Grid -->
+                        <div class="bots-grid-wrapper" aria-label="Bot roster">
+                            <div class="bots-grid" id="bots-grid" role="listbox" aria-label="Select a bot">
+                                <!-- Populated dynamically by bots.js -->
+                            </div>
+                        </div>
+
+                        <!-- Bottom Controls: Options Toggle + Color Picker -->
+                        <div class="bot-bottom-bar">
+                            <button
+                                type="button"
+                                class="options-toggle-btn"
+                                id="options-toggle-btn"
+                                onclick="toggleBotOptions()"
+                                aria-expanded="false"
+                                aria-controls="bot-options-panel"
+                            >
+                                <i class="ph-bold ph-sliders" aria-hidden="true"></i>
+                                <span>Match Options</span>
+                                <i class="ph-bold ph-caret-down" id="options-caret" aria-hidden="true"></i>
+                            </button>
+
+                            <div
+                                class="bot-color-picker"
+                                id="color-seg"
+                                role="group"
+                                aria-label="Choose your piece color"
+                            >
+                                <button
+                                    type="button"
+                                    data-color="w"
+                                    class="color-btn active"
+                                    onclick="pickColor('w')"
+                                    title="Play as White"
+                                    aria-pressed="true"
+                                    aria-label="Play as White"
+                                >
+                                    <span class="chess-icon" aria-hidden="true">&#9812;</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    data-color="r"
+                                    class="color-btn"
+                                    onclick="pickColor('r')"
+                                    title="Random color"
+                                    aria-pressed="false"
+                                    aria-label="Random color"
+                                >
+                                    <span class="chess-icon" aria-hidden="true">&#9822;</span>
+                                    <span style="font-size:10px;font-weight:800;line-height:1">?</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    data-color="b"
+                                    class="color-btn"
+                                    onclick="pickColor('b')"
+                                    title="Play as Black"
+                                    aria-pressed="false"
+                                    aria-label="Play as Black"
+                                >
+                                    <span class="chess-icon" aria-hidden="true">&#9818;</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Collapsible Advanced Options -->
+                        <div class="bot-options-panel" id="bot-options-panel" role="region" aria-label="Advanced options">
+                            <div class="field">
+                                <label for="bot-time-control">Time control (Clocks)</label>
+                                <select id="bot-time-control">
+                                    <option value="none" selected>Untimed (Casual / Infinite)</option>
+                                    <option value="60+0">1 min (Bullet)</option>
+                                    <option value="180+2">3 min + 2s (Blitz)</option>
+                                    <option value="300+3">5 min + 3s (Blitz)</option>
+                                    <option value="600+0">10 min (Rapid)</option>
+                                    <option value="900+10">15 min + 10s (Classical)</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="bot-engine">Engine override</label>
+                                <select id="bot-engine">
+                                    <option value="auto" selected>Auto — Calibrated strength profile</option>
+                                    <option value="stockfish">Stockfish — Full GM strength</option>
+                                    <option value="custom">Custom C++ Engine (main.cpp)</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="bot-pace">Thinking pace</label>
+                                <select id="bot-pace">
+                                    <option value="auto" selected>Bot's default human pace</option>
+                                    <option value="800">Swift (~0.8 s)</option>
+                                    <option value="1600">Realistic (~1.6 s)</option>
+                                    <option value="2500">Deliberate (~2.5 s)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-green" onclick="playBot()" aria-label="Start game against selected bot">
+                            <i class="ph-fill ph-play" aria-hidden="true"></i>
+                            Play Bot
+                        </button>
+                    </div>
+
+                    <!-- Play a Friend Setup -->
+                    <div class="view" id="view-friend" aria-label="Play a friend">
+                        <div class="field">
+                            <label>Your invite ID <span style="font-weight:400;text-transform:none">(click to copy)</span></label>
+                            <div
+                                class="id-box"
+                                id="my-id"
+                                onclick="copyId()"
+                                role="button"
+                                tabindex="0"
+                                aria-label="Copy invite ID"
+                                onkeydown="if(event.key==='Enter'||event.key===' ')copyId()"
+                            >Generating…</div>
+                        </div>
+                        <div class="field">
+                            <label for="friend-id">Friend's invite ID</label>
+                            <input
+                                type="text"
+                                id="friend-id"
+                                placeholder="Paste your friend's ID here"
+                                autocomplete="off"
+                                spellcheck="false"
+                            >
+                        </div>
+                        <button class="btn btn-green" onclick="connectToPeer()">
+                            <i class="ph-fill ph-users" aria-hidden="true"></i>
+                            Join Friend's Game
+                        </button>
+                    </div>
+
+                    <!-- Match History View -->
+                    <div class="view" id="view-history" aria-label="Match history">
+                        <div class="history-header-row">
+                            <span class="history-count" id="history-count">0 games recorded</span>
+                            <button type="button" class="btn-text-danger" onclick="clearMatchHistory()">Clear History</button>
+                        </div>
+                        <div class="history-list-wrap" id="history-list-wrap">
+                            <div class="history-empty" id="history-empty">
+                                <i class="ph-bold ph-hourglass-simple"></i>
+                                <p>No completed games yet.</p>
+                                <span>Finish a bot match to see your game archive and PGN exports here.</span>
+                            </div>
+                            <div class="history-items" id="history-items"></div>
+                        </div>
+                    </div>
+
+                    <!-- Settings & Theme Customization -->
+                    <div class="view" id="view-settings" aria-label="Settings">
+                        <div class="field">
+                            <label for="my-name">Your display name</label>
+                            <input
+                                type="text"
+                                id="my-name"
+                                value="Guest"
+                                placeholder="Enter your name"
+                                maxlength="24"
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label for="board-theme-select">Board color palette</label>
+                            <select id="board-theme-select" onchange="changeBoardTheme(this.value)">
+                                <option value="emerald" selected>Emerald Slate (Modern Default)</option>
+                                <option value="midnight">Midnight Cyan (Deep Contrast)</option>
+                                <option value="walnut">Walnut Wood (Warm Acoustic)</option>
+                                <option value="classic">Classic Olive (Tournament)</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="app-theme-select">Interface appearance</label>
+                            <select id="app-theme-select" onchange="setAppTheme(this.value)">
+                                <option value="dark" selected>Obsidian Dark</option>
+                                <option value="light">Pristine Light</option>
+                                <option value="auto">System Default (OS)</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-gray" onclick="toggleFullScreen()">
+                            <i class="ph ph-corners-out" aria-hidden="true"></i>
+                            Toggle Full Screen
+                        </button>
+                    </div>
+
+                </div><!-- /.panel-body -->
+            </div><!-- /.panel -->
+        </section><!-- /#setup-screen -->
+
+        <!-- ================================================
+             GAME SCREEN: BOARD + CONTROLS + MOVE LOG
+        ================================================ -->
+        <section class="game-screen" id="game-screen" aria-label="Chess game">
+
+            <!-- Board Area: Evaluation Bar + Players + Board -->
+            <section class="board-area" aria-label="Chess board">
+
+                <!-- Vertical Evaluation Bar + Score -->
+                <div class="eval-bar-wrap" id="eval-bar-wrap" role="img"
+                     aria-label="Position evaluation 0.00" title="Position evaluation">
+                    <div class="eval-bar-track" id="eval-bar-track">
+                        <div class="eval-bar-fill" id="eval-bar-fill"></div>
+                        <span class="eval-bar-mid" aria-hidden="true"></span>
+                    </div>
+                    <span class="eval-bar-score" id="eval-bar-score">0.00</span>
+                </div>
+
+                <!-- Board Stack -->
+                <div class="board-stack">
+
+                    <!-- Opponent (Top) -->
+                    <div class="player-bar" id="top-player">
+                        <div class="avatar" aria-hidden="true">
+                            <i class="ph-fill ph-user"></i>
+                        </div>
+                        <div class="pinfo">
+                            <div class="pname-row">
+                                <span class="pname">Opponent</span>
+                                <div class="thinking-pill" id="thinking-pill" aria-label="Bot is computing">
+                                    <span class="thinking-dot"></span>
+                                    <span>Thinking…</span>
+                                </div>
+                            </div>
+                            <span class="pnote"></span>
+                        </div>
+                        <div class="captured-box" id="top-captured" aria-label="Opponent's captured pieces">
+                            <span class="captured-pieces"></span>
+                            <span class="material-advantage"></span>
+                        </div>
+                        <!-- Digital Clock -->
+                        <div class="player-clock" id="top-clock" aria-label="Opponent clock">--:--</div>
+                    </div>
+
+                    <!-- Board Wrapper -->
+                    <div class="board-wrapper">
+                        <div id="myBoard" role="application" aria-label="Chess board"></div>
+
+                        <!-- Pawn Promotion Dialog Overlay -->
+                        <div class="promotion-overlay" id="promotion-overlay" role="dialog" aria-modal="true" aria-label="Choose promotion piece">
+                            <div class="promotion-card">
+                                <div class="promotion-title">Promote Pawn</div>
+                                <div class="promotion-choices" id="promotion-choices">
+                                    <button type="button" class="promo-choice-btn" data-piece="q" onclick="selectPromotionPiece('q')" title="Queen">
+                                        <span class="promo-glyph" id="promo-glyph-q">&#9813;</span>
+                                        <span class="promo-label">Queen</span>
+                                    </button>
+                                    <button type="button" class="promo-choice-btn" data-piece="r" onclick="selectPromotionPiece('r')" title="Rook">
+                                        <span class="promo-glyph" id="promo-glyph-r">&#9814;</span>
+                                        <span class="promo-label">Rook</span>
+                                    </button>
+                                    <button type="button" class="promo-choice-btn" data-piece="b" onclick="selectPromotionPiece('b')" title="Bishop">
+                                        <span class="promo-glyph" id="promo-glyph-b">&#9815;</span>
+                                        <span class="promo-label">Bishop</span>
+                                    </button>
+                                    <button type="button" class="promo-choice-btn" data-piece="n" onclick="selectPromotionPiece('n')" title="Knight">
+                                        <span class="promo-glyph" id="promo-glyph-n">&#9816;</span>
+                                        <span class="promo-label">Knight</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resignation Confirmation Overlay -->
+                        <div class="confirm-modal-overlay" id="resign-modal-overlay" role="dialog" aria-modal="true" aria-label="Confirm resignation">
+                            <div class="confirm-modal-card">
+                                <div class="confirm-modal-icon warning" aria-hidden="true">
+                                    <i class="ph-bold ph-flag"></i>
+                                </div>
+                                <h3 class="confirm-modal-title">Resign Match?</h3>
+                                <p class="confirm-modal-desc">Are you sure you want to forfeit this game? This will count as a loss in your match record.</p>
+                                <div class="confirm-modal-actions">
+                                    <button type="button" class="btn btn-red" onclick="confirmResign()">Resign</button>
+                                    <button type="button" class="btn btn-gray" onclick="closeResignModal()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Game Over Modal Overlay -->
+                        <div
+                            class="game-over-overlay"
+                            id="game-over-overlay"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="go-title"
+                            aria-describedby="go-subtitle"
+                        >
+                            <div class="game-over-card">
+                                <div class="game-over-icon" id="go-icon" aria-hidden="true">
+                                    <i class="ph-fill ph-crown"></i>
+                                </div>
+                                <h2 class="game-over-title" id="go-title">Game Over</h2>
+                                <p class="game-over-subtitle" id="go-subtitle">Checkmate</p>
+                                <div class="game-over-stats" id="go-stats">32 moves played</div>
+
+                                <!-- Accuracy Breakdown Card -->
+                                <div class="accuracy-card" id="accuracy-card" style="display:none;">
+                                    <div class="acc-row">
+                                        <span class="acc-label">Estimated Accuracy</span>
+                                        <span class="acc-value" id="acc-val">91.4%</span>
+                                    </div>
+                                    <div class="acc-pills">
+                                        <span class="acc-pill pill-best" id="acc-best">0 Best</span>
+                                        <span class="acc-pill pill-good" id="acc-good">0 Good</span>
+                                        <span class="acc-pill pill-inacc" id="acc-inacc">0 Inacc</span>
+                                        <span class="acc-pill pill-mistake" id="acc-mistake">0 Mistake</span>
+                                        <span class="acc-pill pill-blunder" id="acc-blunder">0 Blunder</span>
+                                    </div>
+                                </div>
+
+                                <div class="game-over-actions">
+                                    <button class="btn btn-green" onclick="rematchGame()">
+                                        <i class="ph-bold ph-arrows-counter-clockwise" aria-hidden="true"></i>
+                                        Rematch
+                                    </button>
+                                    <button class="btn btn-gray" onclick="exportPgn()">
+                                        <i class="ph-bold ph-download-simple" aria-hidden="true"></i>
+                                        PGN
+                                    </button>
+                                    <button class="btn btn-gray" onclick="returnToMenu()">
+                                        <i class="ph-bold ph-house" aria-hidden="true"></i>
+                                        Menu
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- You (Bottom) -->
+                    <div class="player-bar" id="bottom-player">
+                        <div class="avatar" aria-hidden="true">
+                            <i class="ph-fill ph-user"></i>
+                        </div>
+                        <div class="pinfo">
+                            <div class="pname-row">
+                                <span class="pname">You</span>
+                            </div>
+                            <span class="pnote"></span>
+                        </div>
+                        <div class="captured-box" id="bottom-captured" aria-label="Your captured pieces">
+                            <span class="captured-pieces"></span>
+                            <span class="material-advantage"></span>
+                        </div>
+                        <!-- Digital Clock -->
+                        <div class="player-clock" id="bottom-clock" aria-label="Your clock">--:--</div>
+                    </div>
+
+                </div><!-- /.board-stack -->
+            </section><!-- /.board-area -->
+
+            <!-- Game Info Panel: Status, Theory, Notation, Controls -->
+            <section class="panel game-panel" aria-label="Game information">
+                <header class="panel-head">
+                    <button
+                        class="back-btn visible"
+                        onclick="returnToMenu()"
+                        title="Back to menu"
+                        aria-label="Back to menu"
+                    >
+                        <i class="ph-bold ph-caret-left" aria-hidden="true"></i>
+                    </button>
+                    <i class="ph-fill ph-crown-simple head-icon" aria-hidden="true"></i>
+                    <h1>Game</h1>
+                </header>
+
+                <div class="panel-body">
+
+                    <!-- Live Engine/Match Status -->
+                    <div class="status-box" id="status" role="status" aria-live="polite">
+                        <i class="ph ph-circle" aria-hidden="true"></i>
+                        <span>Waiting to start…</span>
+                    </div>
+
+                    <!-- Reviewing earlier move banner -->
+                    <div class="review-banner" id="review-banner" style="display:none;">
+                        <span><i class="ph-bold ph-clock"></i> Reviewing move <strong id="review-move-label">1</strong></span>
+                        <button type="button" class="btn-text-link" onclick="jumpToLiveMove()">Return to Live</button>
+                    </div>
+
+                    <!-- Opening Book Theory -->
+                    <div class="opening-box" aria-label="Opening theory">
+                        <div class="opening-name-row">
+                            <i class="ph-fill ph-book-open-text" aria-hidden="true"></i>
+                            <span id="opening-name">Starting Position</span>
+                        </div>
+                        <p class="help-text">Theory line — tap to play:</p>
+                        <div id="book-moves-list" class="book-chips-wrap" role="group" aria-label="Book moves"></div>
+                    </div>
+
+                    <!-- Move Notation Table -->
+                    <div class="moves-container" aria-label="Move history">
+                        <div class="moves-header">
+                            <span>
+                                <i class="ph-bold ph-list-numbers" aria-hidden="true"></i>
+                                Move Notation
+                            </span>
+                            <span class="move-count-badge" id="move-count-badge">0 moves</span>
+                        </div>
+                        <div class="moves-table-wrap" id="moves-table-wrap">
+                            <table class="moves-table" id="moves-table" aria-label="Move list">
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Step Navigation Bar -->
+                        <div class="moves-nav-bar" aria-label="Browse game moves">
+                            <button type="button" class="mnav-btn" onclick="stepMove('start')" title="Start of game (Up arrow)" aria-label="Start of game">
+                                <i class="ph-bold ph-caret-double-left"></i>
+                            </button>
+                            <button type="button" class="mnav-btn" onclick="stepMove('prev')" title="Previous move (Left arrow)" aria-label="Previous move">
+                                <i class="ph-bold ph-caret-left"></i>
+                            </button>
+                            <button type="button" class="mnav-btn" onclick="stepMove('next')" title="Next move (Right arrow)" aria-label="Next move">
+                                <i class="ph-bold ph-caret-right"></i>
+                            </button>
+                            <button type="button" class="mnav-btn" onclick="stepMove('end')" title="Current move (Down arrow)" aria-label="Current move">
+                                <i class="ph-bold ph-caret-double-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Game Control Action Bar -->
+                    <div class="game-actions-bar" role="group" aria-label="Game controls">
+                        <button
+                            type="button"
+                            class="action-btn"
+                            onclick="flipBoard()"
+                            title="Flip board (F)"
+                            aria-label="Flip board"
+                        >
+                            <i class="ph-bold ph-arrows-clockwise" aria-hidden="true"></i>
+                            <span>Flip</span>
+                        </button>
+                        <button
+                            type="button"
+                            class="action-btn"
+                            onclick="takebackMove()"
+                            title="Take back last move (U)"
+                            aria-label="Take back last move"
+                        >
+                            <i class="ph-bold ph-arrow-u-up-left" aria-hidden="true"></i>
+                            <span>Undo</span>
+                        </button>
+                        <button
+                            type="button"
+                            class="action-btn"
+                            id="sound-btn"
+                            onclick="toggleSound()"
+                            title="Toggle sound effects"
+                            aria-label="Toggle sound"
+                            aria-pressed="true"
+                        >
+                            <i class="ph-bold ph-speaker-high" aria-hidden="true"></i>
+                            <span id="sound-btn-text">Sound</span>
+                        </button>
+                        <button
+                            type="button"
+                            class="action-btn danger"
+                            onclick="resignGame()"
+                            title="Resign game"
+                            aria-label="Resign game"
+                        >
+                            <i class="ph-bold ph-flag" aria-hidden="true"></i>
+                            <span>Resign</span>
+                        </button>
+                        <button
+                            type="button"
+                            class="action-btn primary"
+                            onclick="rematchGame()"
+                            title="New game (N)"
+                            aria-label="Start new game"
+                        >
+                            <i class="ph-bold ph-plus-circle" aria-hidden="true"></i>
+                            <span>New</span>
+                        </button>
+                    </div>
+
+                    <!-- Utility Bar: FEN, PGN, Shortcuts -->
+                    <div class="game-utility-bar" role="group" aria-label="Game utility actions">
+                        <button type="button" class="util-btn" onclick="copyFen()" title="Copy current position FEN to clipboard">
+                            <i class="ph-bold ph-clipboard-text"></i>
+                            <span>Copy FEN</span>
+                        </button>
+                        <button type="button" class="util-btn" onclick="exportPgn()" title="Export complete PGN to clipboard and file">
+                            <i class="ph-bold ph-download-simple"></i>
+                            <span>Export PGN</span>
+                        </button>
+                        <button type="button" class="util-btn" onclick="showShortcutsModal()" title="View keyboard shortcuts (?)">
+                            <i class="ph-bold ph-keyboard"></i>
+                            <span>Keys</span>
+                        </button>
+                    </div>
+
+                </div><!-- /.panel-body -->
+            </section><!-- /.game-panel -->
+
+        </section><!-- /#game-screen -->
+
+    </main>
+</div><!-- /.app -->
+
+<!-- Keyboard Shortcuts Modal Overlay -->
+<div class="confirm-modal-overlay" id="shortcuts-modal" role="dialog" aria-modal="true" aria-label="Keyboard Shortcuts">
+    <div class="shortcuts-card">
+        <div class="shortcuts-header">
+            <div class="shortcuts-title-row">
+                <i class="ph-bold ph-keyboard" aria-hidden="true"></i>
+                <h2>Keyboard Shortcuts</h2>
+            </div>
+            <button type="button" class="close-btn" onclick="closeShortcutsModal()" aria-label="Close shortcuts">
+                <i class="ph-bold ph-x"></i>
+            </button>
+        </div>
+        <div class="shortcuts-grid">
+            <div class="shortcut-item">
+                <div class="shortcut-keys"><kbd>←</kbd></div>
+                <div class="shortcut-desc">Step back one move</div>
+            </div>
+            <div class="shortcut-item">
+                <div class="shortcut-keys"><kbd>→</kbd></div>
+                <div class="shortcut-desc">Step forward one move</div>
+            </div>
+            <div class="shortcut-item">
+                <div class="shortcut-keys"><kbd>↑</kbd></div>
+                <div class="shortcut-desc">Jump to start of game</div>
+            </div>
+            <div class="shortcut-item">
+                <div class="shortcut-keys"><kbd>↓</kbd></div>
+                <div class="shortcut-desc">Jump to live position</div>
+            </div>
+            <div class="shortcut-item">
+                <div class="shortcut-keys"><kbd>F</kbd></div>
+                <div class="shortcut-desc">Flip board orientation</div>
+            </div>
+            <div class="shortcut-item">
+                <div class="shortcut-keys"><kbd>U</kbd></div>
+                <div class="shortcut-desc">Take back last move (Undo)</div>
+            </div>
+            <div class="shortcut-item">
+                <div class="shortcut-keys"><kbd>N</kbd></div>
+                <div class="shortcut-desc">Start new game / Rematch</div>
+            </div>
+            <div class="shortcut-item">
+                <div class="shortcut-keys"><kbd>?</kbd></div>
+                <div class="shortcut-desc">Open shortcuts help</div>
+            </div>
+            <div class="shortcut-item">
+                <div class="shortcut-keys"><kbd>Esc</kbd></div>
+                <div class="shortcut-desc">Dismiss any modal dialog</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Toast Container -->
+<div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Core Libraries -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+<!-- Application Scripts -->
+<script src="openings.js"></script>
+<script src="bots.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
